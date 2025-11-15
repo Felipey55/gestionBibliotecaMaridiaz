@@ -18,7 +18,14 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
-            $table->timestamps();
+
+            // Relación con secciones (solo para bibliotecarios)
+            $table->foreignId('seccion_id')->nullable()->constrained('secciones')->nullOnDelete();
+
+            // Nuevos campos laborales
+            $table->date('fecha_inicio_labores'); // Obligatorio
+            $table->date('fecha_fin_labores')->nullable(); // Opcional
+            $table->boolean('estado_activo'); // Obligatorio
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

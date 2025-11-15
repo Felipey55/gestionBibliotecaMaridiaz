@@ -1,14 +1,18 @@
-import AppLogoIcon from './app-logo-icon';
-
 export default function AppLogo() {
-    return (
-        <>
-            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-md">
-                <AppLogoIcon className="size-5 fill-current text-white dark:text-black" />
-            </div>
-            <div className="ml-1 grid flex-1 text-left text-sm">
-                <span className="mb-0.5 truncate leading-none font-semibold">Laravel Starter Kit</span>
-            </div>
-        </>
-    );
+  return (
+    <div className="flex items-center group">
+      <img 
+        src="/IMG/escudo.png" 
+        alt="Escudo del Colegio" 
+        className="h-8 w-auto transition-transform duration-300 group-hover:scale-110" 
+      />
+      <div className="ml-2 flex flex-col justify-center">
+        <span className="text-[9px] font-light text-gray-800 dark:text-gray-200 transition-colors duration-300 group-hover:text-blue-700 dark:group-hover:text-blue-400">Colegio</span>
+        <h1 className="text-xs font-bold text-gray-800 dark:text-gray-200 leading-tight transition-colors duration-300 group-hover:text-blue-900 dark:group-hover:text-blue-300">
+          Liceo de la Merced Maridiaz
+        </h1>
+        <span className="text-[9px] font-light text-gray-800 dark:text-gray-200 text-right transition-colors duration-300 group-hover:text-blue-700 dark:group-hover:text-blue-400">Franciscanas</span>
+      </div>
+    </div>
+  );
 }

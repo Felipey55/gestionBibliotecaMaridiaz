@@ -6,11 +6,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable,HasRoles;
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = false;
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +29,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'seccion_id',
+        'fecha_inicio_labores',
+        'fecha_fin_labores',
+        'estado_activo',
     ];
 
     /**
@@ -43,6 +55,17 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'fecha_inicio_labores' => 'date',
+            'fecha_fin_labores' => 'date',
+            'estado_activo' => 'boolean',
         ];
+    }
+    
+    /**
+     * Obtiene la sección asignada al usuario (para bibliotecarios)
+     */
+    public function seccion()
+    {
+        return $this->belongsTo(Seccion::class);
     }
 }

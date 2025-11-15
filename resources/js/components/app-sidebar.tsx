@@ -1,10 +1,44 @@
 import { NavFooter } from '@/components/nav-footer';
-import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import DevelopersModal from '@/pages/nosotros';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
+    SidebarGroup,
+    SidebarGroupContent,
+    useSidebar
+} from '@/components/ui/sidebar';
+import { type NavItem, type SharedData } from '@/types';
+import { Link, usePage } from '@inertiajs/react';
+import {
+    BookOpen,
+    LayoutGrid,
+    BookUser,
+    NotebookPen,
+    Navigation,
+    GraduationCap,
+    UsersRound,
+    BookUp2,
+    Folder,
+    Undo2,
+    ArrowRightLeft,
+    FolderClock,
+    ChevronDown,
+    NotebookTabs,
+    FileBarChart,
+    HelpCircle,
+    Users,
+    CodeSquare
+} from 'lucide-react';
+import { useState, useRef, useCallback } from 'react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -13,44 +47,320 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },
-];
-
-const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
+        title: 'Autores',
+        href: '/autores',
+        icon: BookUser,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits',
+        title: 'Editoriales',
+        href: '/editoriales',
+        icon: NotebookPen,
+    },
+    {
+        title: 'Estanterias',
+        href: '/estanterias',
+        icon: Navigation,
+    },
+    {
+        title: 'Grados',
+        href: '/grados',
+        icon: GraduationCap,
+    },
+    {
+        title: 'Libros',
+        href: '/libros',
         icon: BookOpen,
     },
+    {
+        title: 'Lectores',
+        href: '/lectores',
+        icon: UsersRound,
+    },
+    {
+        title: 'Prestamos',
+        href: '/prestamos',
+        icon: BookUp2,
+    },
+    {
+        title: 'Devoluciones',
+        href: '/devoluciones',
+        icon: Undo2,
+    },
+    {
+        title: 'Historial de préstamos',
+        href: '/reportes/historial-prestamos',
+        icon: FolderClock,
+    },
+    {
+        title: 'Generación de Informes',
+        href: '/informes',
+        icon: FileBarChart,
+    },
+
+    {
+        title: 'Inventario',
+        href: '/inventario',
+        icon: NotebookTabs,
+    },
+    {
+        title: 'Administrar Usuarios',
+        href: '/usuarios',
+        icon: UsersRound,
+    }
+
 ];
 
+const footerNavItems: NavItem[] = [];
+
 export function AppSidebar() {
+    const { auth } = usePage<SharedData>().props;
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+    const [showDevelopersModal, setShowDevelopersModal] = useState(false); // 👈 ESTADO PARA EL MODAL
+    const sidebarRef = useRef<HTMLDivElement>(null);
+    const { setOpen } = useSidebar();
+
+    // Verificar si el usuario tiene rol de administrador
+    const isAdmin = Array.isArray(auth.user.roles) ? auth.user.roles.some(role => role.name === 'Administrador') : false;
+
+    // Optimizar con useCallback para evitar re-renders innecesarios
+    const toggleSection = useCallback((sectionKey: string) => {
+        // Expandir sidebar primero (más eficiente)
+        setOpen(true);
+
+        // Luego actualizar las secciones
+        setOpenSections(prev => ({
+            ...prev,
+            [sectionKey]: !prev[sectionKey]
+        }));
+
+        // Fallback optimizado con requestAnimationFrame para mejor performance
+        if (sidebarRef.current?.classList.contains('collapsed')) {
+            requestAnimationFrame(() => {
+                if (sidebarRef.current) {
+                    sidebarRef.current.classList.remove('collapsed');
+                    sidebarRef.current.style.width = '240px';
+                    // Usar setTimeout para el resize event para evitar bloquear el thread principal
+                    setTimeout(() => {
+                        window.dispatchEvent(new Event('resize'));
+                    }, 0);
+                }
+            });
+        }
+    }, [setOpen]);
+
+    // Memorizar los items filtrados para evitar recálculos
+    const dashboardItem = mainNavItems.find(item => item.title === 'Dashboard')!;
+    const gestionItems = mainNavItems.filter(item => {
+        const allowedItems = ['Autores', 'Estanterias', 'Editoriales'];
+        // Solo mostrar Grados a administradores
+        if (isAdmin) {
+            allowedItems.push('Grados');
+        }
+        return allowedItems.includes(item.title);
+    });
+    const librosItem = mainNavItems.find(item => item.title === 'Libros')!;
+    const lectoresItem = mainNavItems.find(item => item.title === 'Lectores')!;
+    const prestamosItems = mainNavItems.filter(item =>
+        ['Prestamos', 'Devoluciones', 'Historial de préstamos'].includes(item.title)
+    );
+    const informesItem = mainNavItems.find(item => item.title === 'Generación de Informes')!;
+    const inventarioItem = mainNavItems.find(item => item.title === 'Inventario')!;
+    const usuariosItem = mainNavItems.find(item => item.title === 'Administrar Usuarios')!;
+
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
+        <>
+            <Sidebar
+                ref={sidebarRef}
+                collapsible="icon"
+                variant="inset"
+                className="transition-all duration-200 ease-out"
+            >
+                <SidebarHeader>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton size="lg" asChild>
+                                <Link href="/dashboard" prefetch>
+                                    <AppLogo />
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarHeader>
 
-            <SidebarContent>
-                <NavMain items={mainNavItems} />
-            </SidebarContent>
+                <SidebarContent>
+                    <SidebarGroup>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                {/* Dashboard */}
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild>
+                                        <Link href={dashboardItem.href!}>
+                                            {dashboardItem.icon && <dashboardItem.icon className="h-5 w-5" />}
+                                            <span>{dashboardItem.title}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
 
-            <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
-                <NavUser />
-            </SidebarFooter>
-        </Sidebar>
+                                {/* Gestión General - Autores, Estanterías, Editoriales, Grados */}
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton
+                                        onClick={() => toggleSection('gestion')}
+                                        className="w-full justify-start [&>svg:last-child]:ml-auto cursor-pointer transition-colors duration-150"
+                                    >
+                                        <Folder className="h-5 w-5" />
+                                        <span>Gestión General</span>
+                                        <ChevronDown
+                                            className={`h-4 w-4 transition-transform duration-200 ease-out ${openSections.gestion ? 'rotate-180' : ''
+                                                }`}
+                                        />
+                                    </SidebarMenuButton>
+                                    {openSections.gestion && (
+                                        <SidebarMenuSub className="animate-in slide-in-from-top-2 duration-200">
+                                            {gestionItems.map((item) => {
+                                                const IconComponent = item.icon;
+                                                return (
+                                                    <SidebarMenuSubItem key={item.title}>
+                                                        <SidebarMenuSubButton asChild>
+                                                            <Link href={item.href!}>
+                                                                {IconComponent && <IconComponent className="h-5 w-5" />}
+                                                                <span>{item.title}</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                );
+                                            })}
+                                        </SidebarMenuSub>
+                                    )}
+                                </SidebarMenuItem>
+
+                                {/* Operaciones de Préstamos */}
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton
+                                        onClick={() => toggleSection('prestamos')}
+                                        className="w-full justify-start [&>svg:last-child]:ml-auto cursor-pointer transition-colors duration-150"
+                                    >
+                                        <ArrowRightLeft className="h-5 w-5" />
+                                        <span>Gestión de Préstamos</span>
+                                        <ChevronDown
+                                            className={`h-4 w-4 transition-transform duration-200 ease-out ${openSections.prestamos ? 'rotate-180' : ''
+                                                }`}
+                                        />
+                                    </SidebarMenuButton>
+                                    {openSections.prestamos && (
+                                        <SidebarMenuSub className="animate-in slide-in-from-top-2 duration-200">
+                                            {prestamosItems.map((item) => {
+                                                const IconComponent = item.icon;
+                                                return (
+                                                    <SidebarMenuSubItem key={item.title}>
+                                                        <SidebarMenuSubButton asChild>
+                                                            <Link href={item.href!}>
+                                                                {IconComponent && <IconComponent className="h-5 w-5" />}
+                                                                <span>{item.title}</span>
+                                                            </Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                );
+                                            })}
+                                        </SidebarMenuSub>
+                                    )}
+                                </SidebarMenuItem>
+
+                                {/* Libros - Individual */}
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild>
+                                        <Link href={librosItem.href!}>
+                                            {librosItem.icon && <librosItem.icon className="h-5 w-5" />}
+                                            <span>{librosItem.title}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+
+                                {/* Lectores - Individual */}
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild>
+                                        <Link href={lectoresItem.href!}>
+                                            {lectoresItem.icon && <lectoresItem.icon className="h-5 w-5" />}
+                                            <span>{lectoresItem.title}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+
+                                {/* Generación de Informes - SOLO BIBLIOTECARIOS (NO ADMIN) */}
+                                {!isAdmin && (
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild>
+                                            <Link href={informesItem.href!}>
+                                                {informesItem.icon && <informesItem.icon className="h-5 w-5" />}
+                                                <span>{informesItem.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                )}
+
+                                {/* Inventario - SOLO BIBLIOTECARIOS (NO ADMIN) */}
+                                {!isAdmin && (
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild>
+                                            <Link href={inventarioItem.href!}>
+                                                {inventarioItem.icon && <inventarioItem.icon className="h-5 w-5" />}
+                                                <span>{inventarioItem.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                )}
+
+                                {/* Administrar Usuarios - Solo para administradores */}
+                                {isAdmin && (
+                                    <SidebarMenuItem>
+                                        <SidebarMenuButton asChild>
+                                            <Link href={usuariosItem.href!}>
+                                                {usuariosItem.icon && <usuariosItem.icon className="h-5 w-5" />}
+                                                <span>{usuariosItem.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                )}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                </SidebarContent>
+
+                <SidebarFooter>
+                   <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild>
+                                <a 
+                                    href="https://www.youtube.com/watch?v=JT4oHYFpw34&list=PL-s6XUYTlEzqsyLODxenw6QAuccbQgydU" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                >
+                                    <HelpCircle className="h-5 w-5" />
+                                    <span>Ayuda</span>
+                                </a>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        
+                        {/* 👇 CAMBIAR LINK POR BOTÓN QUE ABRE EL MODAL */}
+                        <SidebarMenuItem>
+                            <SidebarMenuButton 
+                                onClick={() => setShowDevelopersModal(true)}
+                                className="cursor-pointer"
+                            >
+                                <CodeSquare className="h-5 w-5" />
+                                <span>Nosotros</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                    <NavUser />
+                </SidebarFooter>
+            </Sidebar>
+
+            {/* 👇 RENDERIZAR EL MODAL FUERA DEL SIDEBAR */}
+            <DevelopersModal 
+                isOpen={showDevelopersModal}
+                onClose={() => setShowDevelopersModal(false)}
+            />
+        </>
     );
 }
